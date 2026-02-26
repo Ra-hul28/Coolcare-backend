@@ -1,11 +1,14 @@
 // server/controllers/contactController.js
-const transporter = require("../config/email");
+const { Resend } = require("resend");
+
+// Initialize Resend with your API Key from Render Environment Variables
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 exports.submitContactForm = async (req, res) => {
   try {
     const { name, phone, email, address, message } = req.body;
 
-    // Validate required fields
+    // 1. Validate required fields
     if (!name || !phone || !email || !address || !message) {
       return res.status(400).json({
         success: false,
@@ -13,11 +16,11 @@ exports.submitContactForm = async (req, res) => {
       });
     }
 
-    // Send Email Notification to Business Owner
-    await transporter.sendMail({
-      from: `"CoolCare Service" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      replyTo: email,
+    // 2. Send Email via Resend API (Bypasses SMTP timeout issues)
+    const { data, error } = await resend.emails.send({
+      from: 'CoolCare <onboarding@resend.dev>', // Keep this as onboarding@resend.dev for free tier
+      to: 'dhamotharan232@gmail.com', // Your verified email
+      reply_to: email,
       subject: "📩 New Service Enquiry - CoolCare",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; border-radius: 10px;">
@@ -29,17 +32,24 @@ exports.submitContactForm = async (req, res) => {
           <p><strong>Address:</strong> ${address}</p>
           <p><strong>Message:</strong><br>${message.replace(/\n/g, "<br>")}</p>
           <hr>
-          <small>Sent on: ${new Date().toLocaleString("en-IN")}</small>
+          <p><small>Sent on: ${new Date().toLocaleString("en-IN")}</small></p>
         </div>
       `,
     });
 
+    if (error) {
+      console.error("Resend API Error:", error);
+      throw new Error(error.message);
+    }
+
+    // 3. Success Response
     res.status(201).json({
       success: true,
       message: "Thank you! Your enquiry has been submitted. We'll contact you shortly.",
     });
+
   } catch (error) {
-    console.error("Contact Form Error:", error);
+    console.error("Contact Form Submission Error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to submit form. Please try again later.",
