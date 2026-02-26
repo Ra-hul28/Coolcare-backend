@@ -2,17 +2,17 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  // Use direct host and port instead of 'service: gmail' for better reliability on Render
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // true for 465, false for other ports
+  port: 587,
+  secure: false, // Use false for port 587 (it will use STARTTLS)
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Your 16-character App Password from Google
+    pass: process.env.EMAIL_PASS,
   },
   tls: {
-    // Helps prevent connection rejection on hosted servers
+    // This is critical for cloud hosting to avoid certificate handshake timeouts
     rejectUnauthorized: false,
+    minVersion: "TLSv1.2"
   },
 });
 
@@ -20,9 +20,8 @@ const transporter = nodemailer.createTransport({
 transporter.verify((error, success) => {
   if (error) {
     console.error("❌ Email transporter error:", error.message);
-    console.log("Check if your App Password in Render is current and has no spaces.");
   } else {
-    console.log("✅ Email transporter ready - Your backend can send emails!");
+    console.log("✅ Email transporter ready - Connection Established!");
   }
 });
 
