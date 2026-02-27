@@ -19,7 +19,7 @@ exports.submitContactForm = async (req, res) => {
     // 2. Send Email via Resend API (Bypasses SMTP timeout issues)
     const { data, error } = await resend.emails.send({
       from: 'CoolCare <onboarding@resend.dev>', // Keep this as onboarding@resend.dev for free tier
-      to: 'dhamotharan232@gmail.com', // Your verified email
+      to: 'rahul28200428@gmail.com', // Your verified email
       reply_to: email,
       subject: "📩 New Service Enquiry - CoolCare",
       html: `
